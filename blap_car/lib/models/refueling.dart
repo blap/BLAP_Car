@@ -11,7 +11,7 @@ class Refueling {
   String? station;
   bool? fullTank;
   bool? previousRefuelingMissing;
-  String? driver;
+  // Removed driver field
   String? paymentMethod;
   String? observation;
   String? attachmentPath;
@@ -29,7 +29,7 @@ class Refueling {
     this.station,
     this.fullTank,
     this.previousRefuelingMissing,
-    this.driver,
+    // Removed driver field
     this.paymentMethod,
     this.observation,
     this.attachmentPath,
@@ -49,7 +49,7 @@ class Refueling {
       'station': station,
       'full_tank': fullTank == true ? 1 : 0,
       'previous_refueling_missing': previousRefuelingMissing == true ? 1 : 0,
-      'driver': driver,
+      // Removed driver field
       'payment_method': paymentMethod,
       'observation': observation,
       'attachment_path': attachmentPath,
@@ -70,7 +70,7 @@ class Refueling {
       station: map['station'],
       fullTank: map['full_tank'] == 1,
       previousRefuelingMissing: map['previous_refueling_missing'] == 1,
-      driver: map['driver'],
+      // Removed driver field
       paymentMethod: map['payment_method'],
       observation: map['observation'],
       attachmentPath: map['attachment_path'],

@@ -1,0 +1,7 @@
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:575:28)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:582:28)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:637:37)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:715:30)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:724:30)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:771:33)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\Admin\Documents\GitHub\BLAP_Car\blap_car\lib\screens\settings_screen.dart:778:28)

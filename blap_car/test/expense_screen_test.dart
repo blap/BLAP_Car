@@ -92,14 +92,15 @@ void main() {
       expect(find.text('Add Expense'), findsOneWidget);
 
       // Verify that form fields are present
+      expect(find.text('Date'), findsOneWidget);
+      expect(find.text('Time'), findsOneWidget);
+      expect(find.text('Odometer'), findsOneWidget);
       expect(find.text('Expense Type'), findsOneWidget);
       expect(find.text('Description'), findsOneWidget);
       expect(find.text('Cost'), findsOneWidget);
-      expect(find.text('Date'), findsOneWidget);
-      expect(find.text('Odometer'), findsOneWidget);
       expect(find.text('Location'), findsOneWidget);
-      expect(find.text('Driver'), findsOneWidget);
       expect(find.text('Payment Method'), findsOneWidget);
+      expect(find.text('Category'), findsOneWidget);
       expect(find.text('Observation'), findsOneWidget);
 
       // Verify that save button is present

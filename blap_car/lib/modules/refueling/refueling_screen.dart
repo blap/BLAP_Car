@@ -86,7 +86,6 @@ class _AddRefuelingScreenState extends State<AddRefuelingScreen> {
   final _litersController = TextEditingController();
   final _totalCostController = TextEditingController();
   final _stationController = TextEditingController();
-  final _driverController = TextEditingController();
   final _paymentMethodController = TextEditingController();
   final _observationController = TextEditingController();
 
@@ -121,7 +120,6 @@ class _AddRefuelingScreenState extends State<AddRefuelingScreen> {
     _litersController.dispose();
     _totalCostController.dispose();
     _stationController.dispose();
-    _driverController.dispose();
     _paymentMethodController.dispose();
     _observationController.dispose();
     super.dispose();
@@ -141,7 +139,6 @@ class _AddRefuelingScreenState extends State<AddRefuelingScreen> {
         station: _stationController.text,
         fullTank: _fullTank,
         previousRefuelingMissing: _previousRefuelingMissing,
-        driver: _driverController.text,
         paymentMethod: _paymentMethodController.text,
         observation: _observationController.text,
       );
@@ -200,7 +197,6 @@ class _AddRefuelingScreenState extends State<AddRefuelingScreen> {
                 });
               }),
               _buildTextField(_stationController, 'Gas Station', 'Enter gas station name'),
-              _buildTextField(_driverController, 'Driver', 'Enter driver name'),
               _buildTextField(_paymentMethodController, 'Payment Method', 'Enter payment method'),
               _buildTextField(_observationController, 'Observation', 'Enter observation'),
             ],
@@ -379,7 +375,7 @@ class RefuelingDetailsScreen extends StatelessWidget {
                     _buildInfoRow('Gas Station', refueling.station ?? 'N/A'),
                     _buildInfoRow('Full Tank', refueling.fullTank == true ? 'Yes' : 'No'),
                     _buildInfoRow('Previous Refueling Missing', refueling.previousRefuelingMissing == true ? 'Yes' : 'No'),
-                    _buildInfoRow('Driver', refueling.driver ?? 'N/A'),
+
                     _buildInfoRow('Payment Method', refueling.paymentMethod ?? 'N/A'),
                     _buildInfoRow('Observation', refueling.observation ?? 'N/A'),
                   ],
@@ -429,7 +425,6 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
   late final TextEditingController _litersController;
   late final TextEditingController _totalCostController;
   late final TextEditingController _stationController;
-  late final TextEditingController _driverController;
   late final TextEditingController _paymentMethodController;
   late final TextEditingController _observationController;
 
@@ -456,7 +451,6 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
     _litersController = TextEditingController(text: widget.refueling.liters?.toString() ?? '');
     _totalCostController = TextEditingController(text: widget.refueling.totalCost?.toString() ?? '');
     _stationController = TextEditingController(text: widget.refueling.station ?? '');
-    _driverController = TextEditingController(text: widget.refueling.driver ?? '');
     _paymentMethodController = TextEditingController(text: widget.refueling.paymentMethod ?? '');
     _observationController = TextEditingController(text: widget.refueling.observation ?? '');
     
@@ -474,7 +468,6 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
     _litersController.dispose();
     _totalCostController.dispose();
     _stationController.dispose();
-    _driverController.dispose();
     _paymentMethodController.dispose();
     _observationController.dispose();
     super.dispose();
@@ -495,7 +488,7 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
         station: _stationController.text,
         fullTank: _fullTank,
         previousRefuelingMissing: _previousRefuelingMissing,
-        driver: _driverController.text,
+
         paymentMethod: _paymentMethodController.text,
         observation: _observationController.text,
       );
@@ -543,6 +536,10 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
                   ),
                 ],
               ),
+              _buildTextField(_stationController, 'Station', 'Enter station name'),
+              // Removed _buildTextField(_driverController, 'Driver', 'Enter driver name'),
+              _buildTextField(_paymentMethodController, 'Payment Method', 'Enter payment method'),
+              _buildTextField(_observationController, 'Observation', 'Enter observation'),
               _buildCheckboxField('Full Tank', _fullTank, (value) {
                 setState(() {
                   _fullTank = value ?? false;
@@ -553,10 +550,6 @@ class _EditRefuelingScreenState extends State<EditRefuelingScreen> {
                   _previousRefuelingMissing = value ?? false;
                 });
               }),
-              _buildTextField(_stationController, 'Gas Station', 'Enter gas station name'),
-              _buildTextField(_driverController, 'Driver', 'Enter driver name'),
-              _buildTextField(_paymentMethodController, 'Payment Method', 'Enter payment method'),
-              _buildTextField(_observationController, 'Observation', 'Enter observation'),
             ],
           ),
         ),

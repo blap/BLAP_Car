@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:blap_car/models/maintenance.dart';
 import 'package:blap_car/services/maintenance_service.dart';
+import 'package:blap_car/services/maintenance_scheduling_service.dart';
 
 class MaintenanceProvider with ChangeNotifier {
   List<Maintenance> _maintenances = [];
   final MaintenanceService _maintenanceService = MaintenanceService();
+  final MaintenanceSchedulingService _schedulingService = MaintenanceSchedulingService();
 
   List<Maintenance> get maintenances => _maintenances;
 
@@ -37,5 +39,27 @@ class MaintenanceProvider with ChangeNotifier {
     await _maintenanceService.deleteMaintenance(id);
     _maintenances.removeWhere((maintenance) => maintenance.id == id);
     notifyListeners();
+  }
+
+  // Get upcoming maintenances for a vehicle
+  Future<List<Maintenance>> getUpcomingMaintenances(int vehicleId, {int days = 30}) async {
+    return await _schedulingService.getUpcomingMaintenances(vehicleId, days: days);
+  }
+
+  // Get overdue maintenances for a vehicle
+  Future<List<Maintenance>> getOverdueMaintenances(int vehicleId) async {
+    return await _schedulingService.getOverdueMaintenances(vehicleId);
+  }
+
+  // Suggest next maintenance based on vehicle history
+  Future<Maintenance?> suggestNextMaintenance(int vehicleId) async {
+    return await _schedulingService.suggestNextMaintenance(vehicleId);
+  }
+
+  // Automatically schedule maintenance based on intervals
+  Future<void> autoScheduleMaintenance(int vehicleId) async {
+    await _schedulingService.autoScheduleMaintenance(vehicleId);
+    // Reload maintenances after auto-scheduling
+    await loadMaintenances(vehicleId);
   }
 }

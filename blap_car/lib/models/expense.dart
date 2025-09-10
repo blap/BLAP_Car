@@ -8,7 +8,7 @@ class Expense {
   DateTime? time;
   double? odometer;
   String? location;
-  String? driver;
+  // Removed driver field
   String? paymentMethod;
   String? observation;
   String? attachmentPath;
@@ -24,7 +24,7 @@ class Expense {
     this.time,
     this.odometer,
     this.location,
-    this.driver,
+    // Removed driver parameter
     this.paymentMethod,
     this.observation,
     this.attachmentPath,
@@ -42,7 +42,7 @@ class Expense {
       'time': time?.toIso8601String(),
       'odometer': odometer,
       'location': location,
-      'driver': driver,
+      // Removed driver from map
       'payment_method': paymentMethod,
       'observation': observation,
       'attachment_path': attachmentPath,
@@ -61,7 +61,7 @@ class Expense {
       time: map['time'] != null ? DateTime.parse(map['time']) : null,
       odometer: map['odometer'],
       location: map['location'],
-      driver: map['driver'],
+      // Removed driver from map
       paymentMethod: map['payment_method'],
       observation: map['observation'],
       attachmentPath: map['attachment_path'],

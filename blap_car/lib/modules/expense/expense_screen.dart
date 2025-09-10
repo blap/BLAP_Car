@@ -84,7 +84,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _odometerController = TextEditingController();
   final _costController = TextEditingController();
   final _locationController = TextEditingController();
-  final _driverController = TextEditingController();
   final _paymentMethodController = TextEditingController();
   final _observationController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -129,7 +128,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _odometerController.dispose();
     _costController.dispose();
     _locationController.dispose();
-    _driverController.dispose();
     _paymentMethodController.dispose();
     _observationController.dispose();
     _descriptionController.dispose();
@@ -147,7 +145,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         time: _timeController.text.isNotEmpty ? DateTime.parse('${_dateController.text} ${_timeController.text}') : null,
         odometer: double.tryParse(_odometerController.text),
         location: _locationController.text,
-        driver: _driverController.text,
         paymentMethod: _paymentMethodController.text,
         observation: _observationController.text,
         category: _selectedCategory,
@@ -187,7 +184,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               _buildTextField(_descriptionController, 'Description', 'Enter description'),
               _buildTextField(_costController, 'Cost', 'Enter cost', true, TextInputType.number),
               _buildTextField(_locationController, 'Location', 'Enter location'),
-              _buildTextField(_driverController, 'Driver', 'Enter driver name'),
               _buildTextField(_paymentMethodController, 'Payment Method', 'Enter payment method'),
               _buildDropdownField('Category', _categories, _selectedCategory, (value) {
                 setState(() {
@@ -357,7 +353,7 @@ class ExpenseDetailsScreen extends StatelessWidget {
                     _buildInfoRow('Cost', expense.cost?.toStringAsFixed(2) ?? 'N/A'),
                     _buildInfoRow('Odometer', expense.odometer?.toStringAsFixed(0) ?? 'N/A'),
                     _buildInfoRow('Location', expense.location ?? 'N/A'),
-                    _buildInfoRow('Driver', expense.driver ?? 'N/A'),
+
                     _buildInfoRow('Payment Method', expense.paymentMethod ?? 'N/A'),
                     _buildInfoRow('Category', expense.category ?? 'N/A'),
                     _buildInfoRow('Observation', expense.observation ?? 'N/A'),
@@ -406,7 +402,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late final TextEditingController _odometerController;
   late final TextEditingController _costController;
   late final TextEditingController _locationController;
-  late final TextEditingController _driverController;
   late final TextEditingController _paymentMethodController;
   late final TextEditingController _observationController;
   late final TextEditingController _descriptionController;
@@ -443,7 +438,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _odometerController = TextEditingController(text: widget.expense.odometer?.toString() ?? '');
     _costController = TextEditingController(text: widget.expense.cost?.toString() ?? '');
     _locationController = TextEditingController(text: widget.expense.location ?? '');
-    _driverController = TextEditingController(text: widget.expense.driver ?? '');
     _paymentMethodController = TextEditingController(text: widget.expense.paymentMethod ?? '');
     _observationController = TextEditingController(text: widget.expense.observation ?? '');
     _descriptionController = TextEditingController(text: widget.expense.description ?? '');
@@ -459,7 +453,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
     _odometerController.dispose();
     _costController.dispose();
     _locationController.dispose();
-    _driverController.dispose();
     _paymentMethodController.dispose();
     _observationController.dispose();
     _descriptionController.dispose();
@@ -478,7 +471,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         time: _timeController.text.isNotEmpty ? DateTime.parse('${_dateController.text} ${_timeController.text}') : null,
         odometer: double.tryParse(_odometerController.text),
         location: _locationController.text,
-        driver: _driverController.text,
         paymentMethod: _paymentMethodController.text,
         observation: _observationController.text,
         category: _selectedCategory,
@@ -518,7 +510,6 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               _buildTextField(_descriptionController, 'Description', 'Enter description'),
               _buildTextField(_costController, 'Cost', 'Enter cost', true, TextInputType.number),
               _buildTextField(_locationController, 'Location', 'Enter location'),
-              _buildTextField(_driverController, 'Driver', 'Enter driver name'),
               _buildTextField(_paymentMethodController, 'Payment Method', 'Enter payment method'),
               _buildDropdownField('Category', _categories, _selectedCategory, (value) {
                 setState(() {

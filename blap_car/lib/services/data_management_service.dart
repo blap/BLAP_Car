@@ -72,23 +72,17 @@ class DataManagementService {
 
   // Export all data to CSV
   Future<String> exportToCsv() async {
-    // For simplicity, we'll create a single CSV with all data
-    // In a real application, you might want separate CSV files for each entity
-    
-    final List<List<dynamic>> rows = [];
+    final rows = <List<dynamic>>[];
     
     // Add header
-    rows.add([
-      'Type', 'ID', 'Vehicle ID', 'Date', 'Description', 'Cost', 'Odometer', 
-      'Additional Info 1', 'Additional Info 2', 'Additional Info 3'
-    ]);
+    rows.add(['Type', 'ID', 'Vehicle ID', 'Date', 'Details 1', 'Details 2', 'Details 3', 'Details 4', 'Details 5', 'Details 6']);
     
     // Export vehicles
     final vehicles = await _vehicleDao.getAllVehicles();
     for (final vehicle in vehicles) {
       rows.add([
-        'Vehicle', vehicle.id, '', '', vehicle.name, '', '',
-        vehicle.make, vehicle.model, vehicle.plate
+        'Vehicle', vehicle.id, vehicle.name, vehicle.make, vehicle.model,
+        vehicle.year, vehicle.plate, '', '', ''
       ]);
     }
     
@@ -97,8 +91,8 @@ class DataManagementService {
     for (final refueling in refuelings) {
       rows.add([
         'Refueling', refueling.id, refueling.vehicleId, refueling.date.toIso8601String(),
-        refueling.fuelType, refueling.totalCost, refueling.odometer,
-        refueling.liters, refueling.pricePerLiter, refueling.station
+        refueling.fuelType, refueling.liters, refueling.totalCost, refueling.station,
+        refueling.paymentMethod, ''  // Removed driver field
       ]);
     }
     
@@ -108,7 +102,7 @@ class DataManagementService {
       rows.add([
         'Expense', expense.id, expense.vehicleId, expense.date.toIso8601String(),
         expense.type, expense.cost, expense.odometer,
-        expense.location, expense.driver, expense.paymentMethod
+        expense.location, expense.paymentMethod, ''  // Removed driver field
       ]);
     }
     
@@ -224,14 +218,13 @@ class DataManagementService {
       TextCellValue('Station'),
       TextCellValue('Full Tank'),
       TextCellValue('Previous Refueling Missing'),
-      TextCellValue('Driver'),
       TextCellValue('Payment Method'),
       TextCellValue('Observation'),
       TextCellValue('Attachment Path')
     ]);
     
-    // Add data
-    for (final refueling in refuelings) {
+    // Add refueling data
+    for (var refueling in refuelings) {
       sheet.appendRow([
         refueling.id != null ? IntCellValue(refueling.id!) : TextCellValue(''),
         IntCellValue(refueling.vehicleId),
@@ -243,9 +236,8 @@ class DataManagementService {
         refueling.totalCost != null ? DoubleCellValue(refueling.totalCost!) : TextCellValue(''),
         refueling.fuelType != null ? TextCellValue(refueling.fuelType!) : TextCellValue(''),
         refueling.station != null ? TextCellValue(refueling.station!) : TextCellValue(''),
-        BoolCellValue(refueling.fullTank == true),
-        BoolCellValue(refueling.previousRefuelingMissing == true),
-        refueling.driver != null ? TextCellValue(refueling.driver!) : TextCellValue(''),
+        refueling.fullTank != null ? BoolCellValue(refueling.fullTank!) : TextCellValue(''),
+        refueling.previousRefuelingMissing != null ? BoolCellValue(refueling.previousRefuelingMissing!) : TextCellValue(''),
         refueling.paymentMethod != null ? TextCellValue(refueling.paymentMethod!) : TextCellValue(''),
         refueling.observation != null ? TextCellValue(refueling.observation!) : TextCellValue(''),
         refueling.attachmentPath != null ? TextCellValue(refueling.attachmentPath!) : TextCellValue(''),
@@ -265,15 +257,14 @@ class DataManagementService {
       TextCellValue('Time'),
       TextCellValue('Odometer'),
       TextCellValue('Location'),
-      TextCellValue('Driver'),
       TextCellValue('Payment Method'),
       TextCellValue('Observation'),
       TextCellValue('Attachment Path'),
       TextCellValue('Category')
     ]);
     
-    // Add data
-    for (final expense in expenses) {
+    // Add expense data
+    for (var expense in expenses) {
       sheet.appendRow([
         expense.id != null ? IntCellValue(expense.id!) : TextCellValue(''),
         IntCellValue(expense.vehicleId),
@@ -284,7 +275,6 @@ class DataManagementService {
         expense.time != null ? TextCellValue(expense.time!.toIso8601String()) : TextCellValue(''),
         expense.odometer != null ? DoubleCellValue(expense.odometer!) : TextCellValue(''),
         expense.location != null ? TextCellValue(expense.location!) : TextCellValue(''),
-        expense.driver != null ? TextCellValue(expense.driver!) : TextCellValue(''),
         expense.paymentMethod != null ? TextCellValue(expense.paymentMethod!) : TextCellValue(''),
         expense.observation != null ? TextCellValue(expense.observation!) : TextCellValue(''),
         expense.attachmentPath != null ? TextCellValue(expense.attachmentPath!) : TextCellValue(''),

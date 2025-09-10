@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:blap_car/modules/vehicle/vehicle_provider.dart';
 import 'package:blap_car/models/vehicle.dart';
+import 'package:blap_car/widgets/custom_app_bar.dart';
 
 class VehicleListScreen extends StatelessWidget {
   const VehicleListScreen({super.key});
@@ -9,8 +10,8 @@ class VehicleListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vehicles'),
+      appBar: CustomAppBar(
+        title: 'Vehicles',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -25,6 +26,7 @@ class VehicleListScreen extends StatelessWidget {
             },
           ),
         ],
+        onVehicleTap: null, // No need to tap on vehicle name here
       ),
       body: Consumer<VehicleProvider>(
         builder: (context, vehicleProvider, child) {
@@ -37,19 +39,19 @@ class VehicleListScreen extends StatelessWidget {
               itemCount: vehicleProvider.vehicles.length,
               itemBuilder: (context, index) {
                 final vehicle = vehicleProvider.vehicles[index];
+                final bool isActive = vehicleProvider.activeVehicle?.id == vehicle.id;
+                
                 return Card(
                   child: ListTile(
                     title: Text(vehicle.name),
                     subtitle: Text('${vehicle.make} ${vehicle.model} (${vehicle.year})'),
-                    trailing: Text(vehicle.plate ?? ''),
+                    trailing: isActive 
+                        ? const Icon(Icons.check, color: Colors.green)
+                        : null,
                     onTap: () {
-                      // Navigate to vehicle details screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VehicleDetailsScreen(vehicle: vehicle),
-                        ),
-                      );
+                      // Set this vehicle as active
+                      vehicleProvider.setActiveVehicle(vehicle);
+                      Navigator.pop(context); // Go back to previous screen
                     },
                   ),
                 );
@@ -118,14 +120,15 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Vehicle'),
+      appBar: CustomAppBar(
+        title: 'Add Vehicle',
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveVehicle,
           ),
         ],
+        onVehicleTap: null, // No need to tap on vehicle name here
       ),
       body: Form(
         key: _formKey,
@@ -180,8 +183,8 @@ class VehicleDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(vehicle.name),
+      appBar: CustomAppBar(
+        title: vehicle.name,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -196,6 +199,10 @@ class VehicleDetailsScreen extends StatelessWidget {
             },
           ),
         ],
+        onVehicleTap: () {
+          // Navigate to vehicle selection
+          Navigator.pushNamed(context, '/vehicles');
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -347,14 +354,15 @@ class _EditVehicleScreenState extends State<EditVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Vehicle'),
+      appBar: CustomAppBar(
+        title: 'Edit Vehicle',
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _updateVehicle,
           ),
         ],
+        onVehicleTap: null, // No need to tap on vehicle name here
       ),
       body: Form(
         key: _formKey,

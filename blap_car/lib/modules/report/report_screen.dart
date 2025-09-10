@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:blap_car/modules/report/report_provider.dart';
 
 class ReportScreen extends StatelessWidget {
@@ -201,40 +202,38 @@ class RefuelingReportScreen extends StatelessWidget {
               
               const SizedBox(height: 16),
               
-              // Fuel type statistics
-              if (reportProvider.refuelingStats['fuelTypeStats'] != null && 
-                  (reportProvider.refuelingStats['fuelTypeStats'] as Map).isNotEmpty) ...[
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('By Fuel Type', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 16),
-                        ..._buildFuelTypeStats(reportProvider.refuelingStats['fuelTypeStats'] as Map<String, dynamic>),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-              ],
-              
-              // Chart placeholder
+              // Fuel Consumption Trend Chart
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Consumption Trend', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text('Fuel Consumption Trend', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: Center(
-                          child: Text('Chart will be displayed here'),
-                        ),
+                        child: _buildConsumptionChart(context, reportProvider),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Cost per Liter Trend Chart
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Cost per Liter Trend', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 200,
+                        child: _buildCostPerLiterChart(context, reportProvider),
                       ),
                     ],
                   ),
@@ -247,43 +246,130 @@ class RefuelingReportScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFuelTypeStats(Map<String, dynamic> fuelTypeStats) {
-    List<Widget> widgets = [];
-    
-    fuelTypeStats.forEach((fuelType, stats) {
-      widgets.add(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(fuelType, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            _buildStatRow('  Total Cost', 'R\$ ${stats['totalCost']?.toStringAsFixed(2) ?? '0.00'}'),
-            _buildStatRow('  Total Liters', '${stats['totalLiters']?.toStringAsFixed(2) ?? '0.00'} L'),
-            _buildStatRow('  Total Distance', '${stats['totalDistance']?.toStringAsFixed(0) ?? '0'} km'),
-            _buildStatRow('  Average Consumption', '${(stats['totalDistance'] / stats['totalLiters'])?.toStringAsFixed(2) ?? '0.00'} km/L'),
-            const SizedBox(height: 16),
-          ],
-        ),
-      );
-    });
-    
-    return widgets;
-  }
-
   Widget _buildStatRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
           Expanded(
             flex: 2,
-            child: Text(label),
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
           Expanded(
             flex: 1,
             child: Text(value, textAlign: TextAlign.right),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildConsumptionChart(BuildContext context, ReportProvider reportProvider) {
+    if (reportProvider.fuelConsumptionTrend.isEmpty) {
+      return Center(
+        child: Text(
+          'No refueling data available for chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    // Prepare data for the line chart
+    List<FlSpot> spots = [];
+    for (int i = 0; i < reportProvider.fuelConsumptionTrend.length; i++) {
+      final dataPoint = reportProvider.fuelConsumptionTrend[i];
+      // Using index as x-axis value for simplicity
+      spots.add(FlSpot(i.toDouble(), dataPoint['consumption'].toDouble()));
+    }
+
+    return LineChart(
+      LineChartData(
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 2,
+            belowBarData: BarAreaData(show: false),
+            dotData: FlDotData(show: true),
+          ),
+        ],
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 1,
+            ),
+          ),
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: true),
+      ),
+    );
+  }
+
+  Widget _buildCostPerLiterChart(BuildContext context, ReportProvider reportProvider) {
+    if (reportProvider.costPerLiterTrend.isEmpty) {
+      return Center(
+        child: Text(
+          'No refueling data available for chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    // Prepare data for the line chart
+    List<FlSpot> spots = [];
+    for (int i = 0; i < reportProvider.costPerLiterTrend.length; i++) {
+      final dataPoint = reportProvider.costPerLiterTrend[i];
+      // Using index as x-axis value for simplicity
+      spots.add(FlSpot(i.toDouble(), dataPoint['costPerLiter'].toDouble()));
+    }
+
+    return LineChart(
+      LineChartData(
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: Colors.green,
+            barWidth: 2,
+            belowBarData: BarAreaData(show: false),
+            dotData: FlDotData(show: true),
+          ),
+        ],
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 1,
+            ),
+          ),
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: true),
       ),
     );
   }
@@ -349,7 +435,7 @@ class ExpenseReportScreen extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
               
-              // Chart placeholder
+              // Expense Trend Chart
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -360,9 +446,27 @@ class ExpenseReportScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: Center(
-                          child: Text('Chart will be displayed here'),
-                        ),
+                        child: _buildExpenseTrendChart(context, reportProvider),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Expense Type Distribution Chart
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Expense Type Distribution', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 200,
+                        child: _buildExpenseTypeDistributionChart(context, reportProvider),
                       ),
                     ],
                   ),
@@ -410,6 +514,95 @@ class ExpenseReportScreen extends StatelessWidget {
             child: Text(value, textAlign: TextAlign.right),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExpenseTrendChart(BuildContext context, ReportProvider reportProvider) {
+    if (reportProvider.expenseTrend.isEmpty) {
+      return Center(
+        child: Text(
+          'No expense data available for chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    // Prepare data for the line chart
+    List<FlSpot> spots = [];
+    for (int i = 0; i < reportProvider.expenseTrend.length; i++) {
+      final dataPoint = reportProvider.expenseTrend[i];
+      // Using index as x-axis value for simplicity
+      spots.add(FlSpot(i.toDouble(), dataPoint['totalCost'].toDouble()));
+    }
+
+    return LineChart(
+      LineChartData(
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: Colors.orange,
+            barWidth: 2,
+            belowBarData: BarAreaData(show: false),
+            dotData: FlDotData(show: true),
+          ),
+        ],
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 1,
+            ),
+          ),
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: true),
+      ),
+    );
+  }
+
+  Widget _buildExpenseTypeDistributionChart(BuildContext context, ReportProvider reportProvider) {
+    if (reportProvider.expenseTypeDistribution.isEmpty) {
+      return Center(
+        child: Text(
+          'No expense data available for chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    // Prepare data for the pie chart
+    List<PieChartSectionData> sections = [];
+    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple];
+    int colorIndex = 0;
+    
+    reportProvider.expenseTypeDistribution.forEach((type, cost) {
+      sections.add(
+        PieChartSectionData(
+          value: cost,
+          title: type,
+          color: colors[colorIndex % colors.length],
+        ),
+      );
+      colorIndex++;
+    });
+
+    return PieChart(
+      PieChartData(
+        sections: sections,
+        centerSpaceRadius: 40,
       ),
     );
   }

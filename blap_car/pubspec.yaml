@@ -43,7 +43,7 @@ dependencies:
   path: ^1.9.0
   
   # UI Components
-  flutter_svg: ^2.0.10
+  flutter_svg: ^2.2.0
   
   # Charts and graphs
   fl_chart: ^1.1.0
@@ -72,18 +72,26 @@ dependencies:
   mobile_scanner: ^7.0.1
   
   # Shared preferences
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.4.0
   
   # File sharing
-  share_plus: ^10.1.2
+  share_plus: ^11.1.0
   
   # Local notifications
-  flutter_local_notifications: ^19.0.0
+  flutter_local_notifications: ^19.1.0
   timezone: ^0.10.0
+  
+  # Logging
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  test: ^1.26.2
+  mockito: ^5.4.4
+  build_runner: ^2.4.13
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

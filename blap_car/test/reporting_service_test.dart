@@ -2,13 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:blap_car/services/reporting_service.dart';
 import 'package:blap_car/models/refueling.dart';
 import 'package:blap_car/models/expense.dart';
+import 'package:blap_car/models/maintenance.dart';
 import 'package:blap_car/models/vehicle.dart';
 
+// Mock DAOs for testing
 class MockRefuelingDao {
   List<Refueling> refuelings = [];
   
   Future<List<Refueling>> getRefuelingsByVehicleId(int vehicleId) async {
-    return refuelings.where((r) => r.vehicleId == vehicleId).toList();
+    return refuelings;
   }
 }
 
@@ -16,7 +18,15 @@ class MockExpenseDao {
   List<Expense> expenses = [];
   
   Future<List<Expense>> getExpensesByVehicleId(int vehicleId) async {
-    return expenses.where((e) => e.vehicleId == vehicleId).toList();
+    return expenses;
+  }
+}
+
+class MockMaintenanceDao {
+  List<Maintenance> maintenances = [];
+  
+  Future<List<Maintenance>> getMaintenancesByVehicleId(int vehicleId) async {
+    return maintenances;
   }
 }
 
@@ -28,28 +38,33 @@ class MockVehicleDao {
   }
 }
 
-// Create a testable version of ReportingService
+// Test implementation of ReportingService that uses mock DAOs
 class TestReportingService extends ReportingService {
   final MockRefuelingDao mockRefuelingDao;
   final MockExpenseDao mockExpenseDao;
+  final MockMaintenanceDao mockMaintenanceDao;
   final MockVehicleDao mockVehicleDao;
   
-  TestReportingService(this.mockRefuelingDao, this.mockExpenseDao, this.mockVehicleDao);
+  TestReportingService(this.mockRefuelingDao, this.mockExpenseDao, this.mockMaintenanceDao, this.mockVehicleDao);
   
-  // Override the getters to return mock DAOs
   @override
   Future<List<Refueling>> getRefuelingsByVehicleId(int vehicleId) async {
-    return await mockRefuelingDao.getRefuelingsByVehicleId(vehicleId);
+    return mockRefuelingDao.getRefuelingsByVehicleId(vehicleId);
   }
   
   @override
   Future<List<Expense>> getExpensesByVehicleId(int vehicleId) async {
-    return await mockExpenseDao.getExpensesByVehicleId(vehicleId);
+    return mockExpenseDao.getExpensesByVehicleId(vehicleId);
+  }
+  
+  @override
+  Future<List<Maintenance>> getMaintenancesByVehicleId(int vehicleId) async {
+    return mockMaintenanceDao.getMaintenancesByVehicleId(vehicleId);
   }
   
   @override
   Future<List<Vehicle>> getAllVehicles() async {
-    return await mockVehicleDao.getAllVehicles();
+    return mockVehicleDao.getAllVehicles();
   }
 }
 
@@ -58,13 +73,16 @@ void main() {
     late TestReportingService reportingService;
     late MockRefuelingDao mockRefuelingDao;
     late MockExpenseDao mockExpenseDao;
+    late MockMaintenanceDao mockMaintenanceDao;
     late MockVehicleDao mockVehicleDao;
 
     setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
       mockRefuelingDao = MockRefuelingDao();
       mockExpenseDao = MockExpenseDao();
+      mockMaintenanceDao = MockMaintenanceDao();
       mockVehicleDao = MockVehicleDao();
-      reportingService = TestReportingService(mockRefuelingDao, mockExpenseDao, mockVehicleDao);
+      reportingService = TestReportingService(mockRefuelingDao, mockExpenseDao, mockMaintenanceDao, mockVehicleDao);
     });
 
     test('calculateFuelEfficiencyStats returns correct data when no refuelings', () async {
@@ -78,6 +96,9 @@ void main() {
       expect(stats['totalDistance'], 0.0);
       expect(stats['averageConsumption'], 0.0);
       expect(stats['costPerKm'], 0.0);
+      expect(stats['bestConsumption'], 0.0);
+      expect(stats['worstConsumption'], 0.0);
+      expect(stats['consumptionTrend'], []);
     });
 
     test('calculateExpenseStats returns correct data when no expenses', () async {
@@ -92,6 +113,7 @@ void main() {
     test('calculateGeneralStats returns correct data when no records', () async {
       mockRefuelingDao.refuelings = [];
       mockExpenseDao.expenses = [];
+      mockMaintenanceDao.maintenances = [];
       
       final stats = await reportingService.calculateGeneralStats(1);
       
@@ -134,6 +156,9 @@ void main() {
       expect(stats['totalLiters'], 45.0);
       expect(stats['totalDistance'], 500.0);
       expect(stats['averageConsumption'], 500.0 / 45.0);
+      expect(stats['bestConsumption'], 500.0 / 45.0);
+      expect(stats['worstConsumption'], 500.0 / 45.0);
+      expect(stats['consumptionTrend'], [500.0 / 45.0]);
     });
   });
 }

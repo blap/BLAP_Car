@@ -32,7 +32,7 @@ void main() {
         station: 'Shell',
         fullTank: true,
         previousRefuelingMissing: false,
-        driver: 'John Doe',
+
         paymentMethod: 'Credit Card',
         observation: 'Regular refueling',
         attachmentPath: '/path/to/attachment.jpg',
@@ -50,7 +50,6 @@ void main() {
       expect(refueling.station, 'Shell');
       expect(refueling.fullTank, true);
       expect(refueling.previousRefuelingMissing, false);
-      expect(refueling.driver, 'John Doe');
       expect(refueling.paymentMethod, 'Credit Card');
       expect(refueling.observation, 'Regular refueling');
       expect(refueling.attachmentPath, '/path/to/attachment.jpg');
@@ -72,7 +71,7 @@ void main() {
         station: 'Shell',
         fullTank: true,
         previousRefuelingMissing: false,
-        driver: 'John Doe',
+
         paymentMethod: 'Credit Card',
         observation: 'Regular refueling',
         attachmentPath: '/path/to/attachment.jpg',
@@ -93,7 +92,6 @@ void main() {
       expect(refuelingFromMap.station, refueling.station);
       expect(refuelingFromMap.fullTank, refueling.fullTank);
       expect(refuelingFromMap.previousRefuelingMissing, refueling.previousRefuelingMissing);
-      expect(refuelingFromMap.driver, refueling.driver);
       expect(refuelingFromMap.paymentMethod, refueling.paymentMethod);
       expect(refuelingFromMap.observation, refueling.observation);
       expect(refuelingFromMap.attachmentPath, refueling.attachmentPath);

@@ -27,7 +27,7 @@ void main() {
         time: time,
         odometer: 10000.0,
         location: 'Garage',
-        driver: 'John Doe',
+
         paymentMethod: 'Credit Card',
         observation: 'Regular maintenance',
         attachmentPath: '/path/to/attachment.jpg',
@@ -43,7 +43,7 @@ void main() {
       expect(expense.time, time);
       expect(expense.odometer, 10000.0);
       expect(expense.location, 'Garage');
-      expect(expense.driver, 'John Doe');
+
       expect(expense.paymentMethod, 'Credit Card');
       expect(expense.observation, 'Regular maintenance');
       expect(expense.attachmentPath, '/path/to/attachment.jpg');
@@ -63,7 +63,7 @@ void main() {
         time: time,
         odometer: 10000.0,
         location: 'Garage',
-        driver: 'John Doe',
+
         paymentMethod: 'Credit Card',
         observation: 'Regular maintenance',
         attachmentPath: '/path/to/attachment.jpg',
@@ -82,7 +82,7 @@ void main() {
       expect(expenseFromMap.time, expense.time);
       expect(expenseFromMap.odometer, expense.odometer);
       expect(expenseFromMap.location, expense.location);
-      expect(expenseFromMap.driver, expense.driver);
+
       expect(expenseFromMap.paymentMethod, expense.paymentMethod);
       expect(expenseFromMap.observation, expense.observation);
       expect(expenseFromMap.attachmentPath, expense.attachmentPath);

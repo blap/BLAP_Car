@@ -10,14 +10,22 @@ class FileSharingService {
   Future<void> shareFile(String filePath, String title) async {
     final file = File(filePath);
     if (await file.exists()) {
-      await Share.shareXFiles([XFile(filePath)], text: title);
+      final shareParams = ShareParams(
+        files: [XFile(filePath)],
+        text: title,
+      );
+      await SharePlus.instance.share(shareParams);
     } else {
       throw Exception('File not found: $filePath');
     }
   }
 
   Future<void> shareText(String text, String subject) async {
-    await Share.share(text, subject: subject);
+    final shareParams = ShareParams(
+      text: text,
+      subject: subject,
+    );
+    await SharePlus.instance.share(shareParams);
   }
 
   Future<String> getTemporaryDirectoryPath() async {

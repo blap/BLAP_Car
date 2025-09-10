@@ -15,6 +15,19 @@ class MaintenanceListScreen extends StatelessWidget {
         title: const Text('Maintenance'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.auto_fix_high),
+            onPressed: () async {
+              final provider = Provider.of<MaintenanceProvider>(context, listen: false);
+              await provider.autoScheduleMaintenance(vehicleId);
+              // Show a snackbar to inform the user
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Maintenance auto-scheduled successfully')),
+                );
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.push(
@@ -46,7 +59,14 @@ class MaintenanceListScreen extends StatelessWidget {
                 return Card(
                   child: ListTile(
                     title: Text('${maintenance.type} - ${maintenance.cost?.toStringAsFixed(2) ?? 'N/A'}'),
-                    subtitle: Text('Status: ${maintenance.status ?? 'N/A'}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Status: ${maintenance.status ?? 'N/A'}'),
+                        if (maintenance.nextDate != null)
+                          Text('Next: ${maintenance.nextDate.toString().split(' ')[0]}'),
+                      ],
+                    ),
                     trailing: Text(maintenance.date?.toString().split(' ')[0] ?? 'N/A'),
                     onTap: () {
                       // Navigate to maintenance details screen
@@ -63,6 +83,56 @@ class MaintenanceListScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final provider = Provider.of<MaintenanceProvider>(context, listen: false);
+          final suggestedMaintenance = await provider.suggestNextMaintenance(vehicleId);
+          
+          if (suggestedMaintenance != null && context.mounted) {
+            // Show dialog to confirm suggested maintenance
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Suggested Maintenance'),
+                  content: Text(
+                      'We suggest scheduling a ${suggestedMaintenance.type} maintenance. Would you like to add it?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Add'),
+                    ),
+                  ],
+                );
+              },
+            );
+            
+            if (confirmed == true && context.mounted) {
+              // Add the suggested maintenance
+              await provider.addMaintenance(suggestedMaintenance);
+              // Show confirmation
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Suggested maintenance added successfully')),
+                );
+              }
+            }
+          } else if (context.mounted) {
+            // No suggestion available, navigate to add screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddMaintenanceScreen(vehicleId: vehicleId),
+              ),
+            );
+          }
+        },
+        child: const Icon(Icons.auto_awesome),
       ),
     );
   }
