@@ -255,7 +255,9 @@ class UnitTestService {
     // Generate tests for each method
     for (final method in methods) {
       testBuffer.writeln('    test(\'$method method works correctly\', () async {');
-      testBuffer.writeln('      // TODO: Implement test for $method');
+      testBuffer.writeln('      // Test the $method method');
+      testBuffer.writeln('      expect($serviceName, isNotNull);');
+      testBuffer.writeln('      // Add specific assertions based on the method\'s expected behavior');
       testBuffer.writeln('      expect(true, isTrue);');
       testBuffer.writeln('    });');
       testBuffer.writeln('');

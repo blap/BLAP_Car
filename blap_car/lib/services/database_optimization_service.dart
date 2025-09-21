@@ -161,6 +161,7 @@ class DatabaseOptimizationService {
   Future<List<String>> analyzeDatabase() async {
     return _errorHandlingService.safeAsyncCall(() async {
       final suggestions = <String>[];
+      final db = await database;
       
       // Check if common indexes exist
       final commonIndexes = {
@@ -170,11 +171,47 @@ class DatabaseOptimizationService {
         'maintenance': ['vehicle_id', 'date'],
       };
       
-      // In a real implementation, we would check if these indexes exist
-      // For now, we'll just suggest creating them
+      // Get existing indexes from the database
+      final indexResults = await db.rawQuery("SELECT name, tbl_name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'");
+      final existingIndexes = <String, Set<String>>{};
+      
+      // Parse existing indexes
+      for (final row in indexResults) {
+        final tableName = row['tbl_name'] as String;
+        final indexName = row['name'] as String;
+        
+        // Extract column name from index name (assuming format: table_column_idx)
+        if (indexName.contains('_')) {
+          final parts = indexName.split('_');
+          if (parts.length >= 2) {
+            final columnName = parts[parts.length - 2]; // Get the column part
+            if (!existingIndexes.containsKey(tableName)) {
+              existingIndexes[tableName] = <String>{};
+            }
+            existingIndexes[tableName]!.add(columnName);
+          }
+        }
+      }
+      
+      // Check for missing indexes
       for (final table in commonIndexes.keys) {
-        for (final column in commonIndexes[table]!) {
-          suggestions.add('Consider creating an index on $table.$column for better query performance');
+        final requiredColumns = commonIndexes[table]!;
+        final existingColumns = existingIndexes[table] ?? <String>{};
+        
+        for (final column in requiredColumns) {
+          // Check if column index exists (simple check)
+          bool indexExists = false;
+          for (final existingColumn in existingColumns) {
+            if (existingColumn.toLowerCase().contains(column.toLowerCase()) || 
+                column.toLowerCase().contains(existingColumn.toLowerCase())) {
+              indexExists = true;
+              break;
+            }
+          }
+          
+          if (!indexExists) {
+            suggestions.add('Consider creating an index on $table.$column for better query performance');
+          }
         }
       }
       

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:blap_car/widgets/custom_app_bar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:blap_car/services/theme_service.dart';
+import 'package:file_picker/file_picker.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -561,10 +561,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Convert to JSON
       final jsonString = jsonEncode(settings);
       
-      // Save to file
-      final directory = await getApplicationDocumentsDirectory();
+      // Let user choose where to save the file
       final fileName = 'blap_car_settings_${DateTime.now().millisecondsSinceEpoch}.json';
-      final filePath = '${directory.path}/$fileName';
+      final filePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save settings file:',
+        fileName: fileName,
+        allowedExtensions: ['json'],
+        type: FileType.custom,
+      );
+      
+      if (filePath == null) {
+        // User canceled the save dialog
+        return;
+      }
       
       final file = File(filePath);
       await file.writeAsString(jsonString);
@@ -587,38 +596,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _importSettings(BuildContext context) async {
     try {
-      // In a real implementation, this would load settings from a file
-      // For now, we'll just simulate the operation
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Pick a JSON file
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
       
-      // Simulate loading settings
-      final settings = {
-        'notifications_enabled': true,
-        'location_enabled': false,
-        'dark_mode_enabled': false,
-        'currency': 'USD',
-        'language': 'English',
-        'auto_backup_enabled': false,
-        'backup_frequency': 'Weekly',
-        'reminders_enabled': true,
-        'distance_unit': 'Kilometers',
-        'fuel_unit': 'Liters',
-        'show_fuel_costs': true,
-        'show_maintenance_costs': true,
-        // Advanced notification preferences
-        'fuel_cost_alerts_enabled': true,
-        'maintenance_due_alerts_enabled': true,
-        'expense_threshold_alerts_enabled': true,
-        'notification_sound': 'Default',
-        'notification_priority': 'Normal',
-        // Advanced configuration options
-        'default_export_format': 'Excel',
-        'chart_visualization_style': 'Line',
-        'data_compression_enabled': false,
-        'advanced_reminder_algorithms_enabled': false,
-        'auto_data_cleanup_enabled': false,
-        'data_retention_period': 'Forever',
-      };
+      if (result == null || result.files.isEmpty) {
+        // User canceled the picker
+        return;
+      }
+      
+      final file = File(result.files.single.path!);
+      final jsonString = await file.readAsString();
+      final settings = jsonDecode(jsonString) as Map<String, dynamic>;
 
       // Apply settings
       final prefs = await SharedPreferences.getInstance();

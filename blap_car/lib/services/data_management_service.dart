@@ -132,39 +132,490 @@ class DataManagementService {
 
   // Import data from Excel
   Future<void> importFromExcel(String filePath) async {
-    // This is a simplified implementation
-    // In a real application, you would need to parse the Excel file
-    // and handle data validation, conflicts, etc.
-    
-    final file = File(filePath);
-    final bytes = await file.readAsBytes();
-    final excel = Excel.decodeBytes(bytes);
-    
-    // Process each sheet
-    for (var table in excel.tables.keys) {
-      // Handle each sheet based on its name
-      // This would require implementing the actual parsing logic
-      debugPrint('Processing sheet: $table');
+    try {
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final excel = Excel.decodeBytes(bytes);
+      
+      // Process each sheet
+      for (var table in excel.tables.keys) {
+        final sheet = excel.tables[table]!;
+        if (sheet.rows.length <= 1) continue; // Skip empty sheets or only header
+        
+        // Process based on sheet name
+        switch (table) {
+          case 'Vehicles':
+            await _processVehicleSheet(sheet);
+            break;
+          case 'Refuelings':
+            await _processRefuelingSheet(sheet);
+            break;
+          case 'Expenses':
+            await _processExpenseSheet(sheet);
+            break;
+          case 'Maintenance':
+            await _processMaintenanceSheet(sheet);
+            break;
+          case 'Reminders':
+            await _processReminderSheet(sheet);
+            break;
+          case 'Drivers':
+            await _processDriverSheet(sheet);
+            break;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error importing from Excel: $e');
+      rethrow;
     }
   }
 
   // Import data from CSV
   Future<void> importFromCsv(String filePath) async {
-    // This is a simplified implementation
-    // In a real application, you would need to parse the CSV file
-    // and handle data validation, conflicts, etc.
-    
-    final file = File(filePath);
-    final csvString = await file.readAsString();
-    final csvData = const CsvToListConverter().convert(csvString);
-    
-    // Process each row
+    try {
+      final file = File(filePath);
+      final csvString = await file.readAsString();
+      final csvData = const CsvToListConverter().convert(csvString);
+      
+      // Process each row, skip header row
+      for (int i = 1; i < csvData.length; i++) {
+        final row = csvData[i];
+        if (row.length < 4) continue; // Skip incomplete rows
+        
+        final type = row[0] as String;
+        
+        // Handle each row based on its type
+        switch (type) {
+          case 'Vehicle':
+            await _processVehicleRow(row);
+            break;
+          case 'Refueling':
+            await _processRefuelingRow(row);
+            break;
+          case 'Expense':
+            await _processExpenseRow(row);
+            break;
+          case 'Maintenance':
+            await _processMaintenanceRow(row);
+            break;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error importing from CSV: $e');
+      rethrow;
+    }
+  }
+
+  // Process vehicle sheet from Excel
+  Future<void> _processVehicleSheet(Sheet sheet) async {
     // Skip header row
-    for (int i = 1; i < csvData.length; i++) {
-      final row = csvData[i];
-      // Handle each row based on its type
-      // This would require implementing the actual parsing logic
-      debugPrint('Processing row: $row');
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final vehicle = Vehicle(
+          name: row[1]?.value?.toString() ?? '',
+          make: row[2]?.value?.toString(),
+          model: row[3]?.value?.toString(),
+          year: row[4]?.value is int ? row[4]!.value as int : 
+                row[4]?.value?.toString().isNotEmpty == true ? int.tryParse(row[4]!.value.toString()) : null,
+          plate: row[5]?.value?.toString(),
+          fuelTankVolume: row[6]?.value is double ? row[6]!.value as double : 
+                         row[6]?.value is int ? (row[6]!.value as int).toDouble() :
+                         row[6]?.value?.toString().isNotEmpty == true ? double.tryParse(row[6]!.value.toString()) : null,
+          vin: row[7]?.value?.toString(),
+          renavam: row[8]?.value?.toString(),
+          initialOdometer: row[9]?.value is double ? row[9]!.value as double : 
+                          row[9]?.value is int ? (row[9]!.value as int).toDouble() :
+                          row[9]?.value?.toString().isNotEmpty == true ? double.tryParse(row[9]!.value.toString()) : null,
+          createdAt: DateTime.now(),
+        );
+        
+        // Set createdAt if available
+        if (row.length > 10 && row[10]?.value?.toString().isNotEmpty == true) {
+          try {
+            vehicle.createdAt = DateTime.parse(row[10]!.value.toString());
+          } catch (e) {
+            vehicle.createdAt = DateTime.now();
+          }
+        }
+        
+        await _vehicleDao.insertVehicle(vehicle);
+      } catch (e) {
+        debugPrint('Error processing vehicle row: $e');
+      }
+    }
+  }
+
+  // Process refueling sheet from Excel
+  Future<void> _processRefuelingSheet(Sheet sheet) async {
+    // Skip header row
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final refueling = Refueling(
+          vehicleId: row[1]?.value is int ? row[1]!.value as int : 
+                    row[1]?.value?.toString().isNotEmpty == true ? int.tryParse(row[1]!.value.toString()) ?? 0 : 0,
+          date: row[2]?.value?.toString().isNotEmpty == true ? DateTime.parse(row[2]!.value.toString()) : DateTime.now(),
+          odometer: row[4]?.value is double ? row[4]!.value as double : 
+                   row[4]?.value is int ? (row[4]!.value as int).toDouble() :
+                   row[4]?.value?.toString().isNotEmpty == true ? double.tryParse(row[4]!.value.toString()) ?? 0.0 : 0.0,
+          fuelType: row[8]?.value?.toString(),
+          station: row[9]?.value?.toString(),
+          paymentMethod: row[12]?.value?.toString(),
+          observation: row[13]?.value?.toString(),
+          attachmentPath: row[14]?.value?.toString(),
+        );
+        
+        // Set optional fields
+        if (row.length > 3 && row[3]?.value?.toString().isNotEmpty == true) {
+          try {
+            refueling.time = DateTime.parse(row[3]!.value.toString());
+          } catch (e) {
+            // Ignore time parsing errors
+          }
+        }
+        
+        if (row.length > 5 && row[5]?.value != null) {
+          refueling.liters = row[5]?.value is double ? row[5]!.value as double : 
+                           row[5]?.value is int ? (row[5]!.value as int).toDouble() :
+                           row[5]?.value?.toString().isNotEmpty == true ? double.tryParse(row[5]!.value.toString()) : null;
+        }
+        
+        if (row.length > 6 && row[6]?.value != null) {
+          refueling.pricePerLiter = row[6]?.value is double ? row[6]!.value as double : 
+                                  row[6]?.value is int ? (row[6]!.value as int).toDouble() :
+                                  row[6]?.value?.toString().isNotEmpty == true ? double.tryParse(row[6]!.value.toString()) : null;
+        }
+        
+        if (row.length > 7 && row[7]?.value != null) {
+          refueling.totalCost = row[7]?.value is double ? row[7]!.value as double : 
+                              row[7]?.value is int ? (row[7]!.value as int).toDouble() :
+                              row[7]?.value?.toString().isNotEmpty == true ? double.tryParse(row[7]!.value.toString()) : null;
+        }
+        
+        if (row.length > 10 && row[10]?.value != null) {
+          refueling.fullTank = row[10]?.value is bool ? row[10]!.value as bool : 
+                             row[10]?.value?.toString().toLowerCase() == 'true';
+        }
+        
+        if (row.length > 11 && row[11]?.value != null) {
+          refueling.previousRefuelingMissing = row[11]?.value is bool ? row[11]!.value as bool : 
+                                             row[11]?.value?.toString().toLowerCase() == 'true';
+        }
+        
+        await _refuelingDao.insertRefueling(refueling);
+      } catch (e) {
+        debugPrint('Error processing refueling row: $e');
+      }
+    }
+  }
+
+  // Process expense sheet from Excel
+  Future<void> _processExpenseSheet(Sheet sheet) async {
+    // Skip header row
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final expense = Expense(
+          vehicleId: row[1]?.value is int ? row[1]!.value as int : 
+                    row[1]?.value?.toString().isNotEmpty == true ? int.tryParse(row[1]!.value.toString()) ?? 0 : 0,
+          type: row[2]?.value?.toString(),
+          description: row[3]?.value?.toString(),
+          date: row[5]?.value?.toString().isNotEmpty == true ? DateTime.parse(row[5]!.value.toString()) : DateTime.now(),
+          location: row[8]?.value?.toString(),
+          paymentMethod: row[9]?.value?.toString(),
+          observation: row[10]?.value?.toString(),
+          attachmentPath: row[11]?.value?.toString(),
+          category: row[12]?.value?.toString(),
+        );
+        
+        // Set optional fields
+        if (row.length > 4 && row[4]?.value != null) {
+          expense.cost = row[4]?.value is double ? row[4]!.value as double : 
+                        row[4]?.value is int ? (row[4]!.value as int).toDouble() :
+                        row[4]?.value?.toString().isNotEmpty == true ? double.tryParse(row[4]!.value.toString()) : null;
+        }
+        
+        if (row.length > 6 && row[6]?.value?.toString().isNotEmpty == true) {
+          try {
+            expense.time = DateTime.parse(row[6]!.value.toString());
+          } catch (e) {
+            // Ignore time parsing errors
+          }
+        }
+        
+        if (row.length > 7 && row[7]?.value != null) {
+          expense.odometer = row[7]?.value is double ? row[7]!.value as double : 
+                           row[7]?.value is int ? (row[7]!.value as int).toDouble() :
+                           row[7]?.value?.toString().isNotEmpty == true ? double.tryParse(row[7]!.value.toString()) : null;
+        }
+        
+        await _expenseDao.insertExpense(expense);
+      } catch (e) {
+        debugPrint('Error processing expense row: $e');
+      }
+    }
+  }
+
+  // Process maintenance sheet from Excel
+  Future<void> _processMaintenanceSheet(Sheet sheet) async {
+    // Skip header row
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final maintenance = Maintenance(
+          vehicleId: row[1]?.value is int ? row[1]!.value as int : 
+                    row[1]?.value?.toString().isNotEmpty == true ? int.tryParse(row[1]!.value.toString()) ?? 0 : 0,
+          type: row[2]?.value?.toString(),
+          description: row[3]?.value?.toString(),
+        );
+        
+        // Set optional fields
+        if (row.length > 4 && row[4]?.value != null) {
+          maintenance.cost = row[4]?.value is double ? row[4]!.value as double : 
+                           row[4]?.value is int ? (row[4]!.value as int).toDouble() :
+                           row[4]?.value?.toString().isNotEmpty == true ? double.tryParse(row[4]!.value.toString()) : null;
+        }
+        
+        if (row.length > 5 && row[5]?.value?.toString().isNotEmpty == true) {
+          try {
+            maintenance.date = DateTime.parse(row[5]!.value.toString());
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+        
+        if (row.length > 6 && row[6]?.value?.toString().isNotEmpty == true) {
+          try {
+            maintenance.nextDate = DateTime.parse(row[6]!.value.toString());
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+        
+        if (row.length > 7 && row[7]?.value != null) {
+          maintenance.odometer = row[7]?.value is int ? row[7]!.value as int : 
+                               row[7]?.value?.toString().isNotEmpty == true ? int.tryParse(row[7]!.value.toString()) : null;
+        }
+        
+        if (row.length > 8 && row[8]?.value?.toString().isNotEmpty == true) {
+          maintenance.status = row[8]!.value.toString();
+        }
+        
+        await _maintenanceDao.insertMaintenance(maintenance);
+      } catch (e) {
+        debugPrint('Error processing maintenance row: $e');
+      }
+    }
+  }
+
+  // Process reminder sheet from Excel
+  Future<void> _processReminderSheet(Sheet sheet) async {
+    // Skip header row
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final reminder = ExpenseReminder(
+          vehicleId: row[1]?.value is int ? row[1]!.value as int : 
+                    row[1]?.value?.toString().isNotEmpty == true ? int.tryParse(row[1]!.value.toString()) ?? 0 : 0,
+          expenseType: row[2]?.value?.toString(),
+          isRecurring: row[3]?.value is bool ? row[3]!.value as bool : 
+                      row[3]?.value?.toString().toLowerCase() == 'true',
+          triggerKmEnabled: row[4]?.value is bool ? row[4]!.value as bool : 
+                           row[4]?.value?.toString().toLowerCase() == 'true',
+          triggerDateEnabled: row[6]?.value is bool ? row[6]!.value as bool : 
+                            row[6]?.value?.toString().toLowerCase() == 'true',
+          recurringKmEnabled: row[8]?.value is bool ? row[8]!.value as bool : 
+                            row[8]?.value?.toString().toLowerCase() == 'true',
+          recurringTimeEnabled: row[10]?.value is bool ? row[10]!.value as bool : 
+                              row[10]?.value?.toString().toLowerCase() == 'true',
+          createdAt: row[14]?.value?.toString().isNotEmpty == true ? DateTime.parse(row[14]!.value.toString()) : DateTime.now(),
+        );
+        
+        // Set optional fields
+        if (row.length > 5 && row[5]?.value != null) {
+          reminder.triggerKm = row[5]?.value is double ? row[5]!.value as double : 
+                             row[5]?.value is int ? (row[5]!.value as int).toDouble() :
+                             row[5]?.value?.toString().isNotEmpty == true ? double.tryParse(row[5]!.value.toString()) : null;
+        }
+        
+        if (row.length > 7 && row[7]?.value?.toString().isNotEmpty == true) {
+          try {
+            reminder.triggerDate = DateTime.parse(row[7]!.value.toString());
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+        
+        if (row.length > 9 && row[9]?.value != null) {
+          reminder.recurringKmInterval = row[9]?.value is int ? row[9]!.value as int : 
+                                       row[9]?.value?.toString().isNotEmpty == true ? int.tryParse(row[9]!.value.toString()) : null;
+        }
+        
+        if (row.length > 11 && row[11]?.value != null) {
+          reminder.recurringDaysInterval = row[11]?.value is int ? row[11]!.value as int : 
+                                         row[11]?.value?.toString().isNotEmpty == true ? int.tryParse(row[11]!.value.toString()) : null;
+        }
+        
+        if (row.length > 12 && row[12]?.value != null) {
+          reminder.recurringMonthsInterval = row[12]?.value is int ? row[12]!.value as int : 
+                                           row[12]?.value?.toString().isNotEmpty == true ? int.tryParse(row[12]!.value.toString()) : null;
+        }
+        
+        if (row.length > 13 && row[13]?.value != null) {
+          reminder.recurringYearsInterval = row[13]?.value is int ? row[13]!.value as int : 
+                                          row[13]?.value?.toString().isNotEmpty == true ? int.tryParse(row[13]!.value.toString()) : null;
+        }
+        
+        if (row.length > 15 && row[15]?.value?.toString().isNotEmpty == true) {
+          try {
+            reminder.updatedAt = DateTime.parse(row[15]!.value.toString());
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+        
+        await _expenseReminderDao.insertExpenseReminder(reminder);
+      } catch (e) {
+        debugPrint('Error processing reminder row: $e');
+      }
+    }
+  }
+
+  // Process driver sheet from Excel
+  Future<void> _processDriverSheet(Sheet sheet) async {
+    // Skip header row
+    for (int i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      if (row.isEmpty) continue;
+      
+      try {
+        final driver = Driver(
+          name: row[1]?.value?.toString() ?? '',
+          licenseNumber: row[2]?.value?.toString(),
+          contactInfo: row[4]?.value?.toString(),
+          createdAt: row[5]?.value?.toString().isNotEmpty == true ? DateTime.parse(row[5]!.value.toString()) : DateTime.now(),
+        );
+        
+        // Set optional fields
+        if (row.length > 3 && row[3]?.value?.toString().isNotEmpty == true) {
+          try {
+            driver.licenseExpiryDate = DateTime.parse(row[3]!.value.toString());
+          } catch (e) {
+            // Ignore date parsing errors
+          }
+        }
+        
+        await _driverDao.insertDriver(driver);
+      } catch (e) {
+        debugPrint('Error processing driver row: $e');
+      }
+    }
+  }
+
+  // Process vehicle row from CSV
+  Future<void> _processVehicleRow(List<dynamic> row) async {
+    try {
+      final vehicle = Vehicle(
+        name: row[2]?.toString() ?? '',
+        make: row[3]?.toString(),
+        model: row[4]?.toString(),
+        year: row[5] is int ? row[5] as int : 
+              row[5]?.toString().isNotEmpty == true ? int.tryParse(row[5].toString()) : null,
+        plate: row[6]?.toString(),
+        createdAt: DateTime.now(),
+      );
+      
+      await _vehicleDao.insertVehicle(vehicle);
+    } catch (e) {
+      debugPrint('Error processing vehicle row: $e');
+    }
+  }
+
+  // Process refueling row from CSV
+  Future<void> _processRefuelingRow(List<dynamic> row) async {
+    try {
+      final refueling = Refueling(
+        vehicleId: row[2] is int ? row[2] as int : 
+                  row[2]?.toString().isNotEmpty == true ? int.tryParse(row[2].toString()) ?? 0 : 0,
+        date: row[3]?.toString().isNotEmpty == true ? DateTime.parse(row[3].toString()) : DateTime.now(),
+        odometer: 0.0, // Required field
+        fuelType: row[4]?.toString(),
+        station: row[7]?.toString(),
+        paymentMethod: row[8]?.toString(),
+      );
+      
+      // Set optional fields
+      if (row.length > 5 && row[5] != null) {
+        refueling.liters = row[5] is double ? row[5] as double : 
+                         row[5] is int ? (row[5] as int).toDouble() :
+                         row[5]?.toString().isNotEmpty == true ? double.tryParse(row[5].toString()) : null;
+      }
+      
+      if (row.length > 6 && row[6] != null) {
+        refueling.totalCost = row[6] is double ? row[6] as double : 
+                            row[6] is int ? (row[6] as int).toDouble() :
+                            row[6]?.toString().isNotEmpty == true ? double.tryParse(row[6].toString()) : null;
+      }
+      
+      await _refuelingDao.insertRefueling(refueling);
+    } catch (e) {
+      debugPrint('Error processing refueling row: $e');
+    }
+  }
+
+  // Process expense row from CSV
+  Future<void> _processExpenseRow(List<dynamic> row) async {
+    try {
+      final expense = Expense(
+        vehicleId: row[2] is int ? row[2] as int : 
+                  row[2]?.toString().isNotEmpty == true ? int.tryParse(row[2].toString()) ?? 0 : 0,
+        type: row[4]?.toString(),
+        cost: row[5] is double ? row[5] as double : 
+              row[5] is int ? (row[5] as int).toDouble() :
+              row[5]?.toString().isNotEmpty == true ? double.tryParse(row[5].toString()) : null,
+        date: row[3]?.toString().isNotEmpty == true ? DateTime.parse(row[3].toString()) : DateTime.now(),
+        odometer: row[6] is double ? row[6] as double : 
+                 row[6] is int ? (row[6] as int).toDouble() :
+                 row[6]?.toString().isNotEmpty == true ? double.tryParse(row[6].toString()) : null,
+        location: row[7]?.toString(),
+        paymentMethod: row[8]?.toString(),
+      );
+      
+      await _expenseDao.insertExpense(expense);
+    } catch (e) {
+      debugPrint('Error processing expense row: $e');
+    }
+  }
+
+  // Process maintenance row from CSV
+  Future<void> _processMaintenanceRow(List<dynamic> row) async {
+    try {
+      final maintenance = Maintenance(
+        vehicleId: row[2] is int ? row[2] as int : 
+                  row[2]?.toString().isNotEmpty == true ? int.tryParse(row[2].toString()) ?? 0 : 0,
+        type: row[4]?.toString(),
+        cost: row[5] is double ? row[5] as double : 
+              row[5] is int ? (row[5] as int).toDouble() :
+              row[5]?.toString().isNotEmpty == true ? double.tryParse(row[5].toString()) : null,
+        date: row[3]?.toString().isNotEmpty == true ? DateTime.parse(row[3].toString()) : null,
+        status: row[7]?.toString(),
+        nextDate: row[8]?.toString().isNotEmpty == true ? DateTime.parse(row[8].toString()) : null,
+      );
+      
+      await _maintenanceDao.insertMaintenance(maintenance);
+    } catch (e) {
+      debugPrint('Error processing maintenance row: $e');
     }
   }
 

@@ -8,6 +8,7 @@ class ReportProvider with ChangeNotifier {
   Map<String, dynamic> _generalStats = {};
   Map<String, dynamic> _refuelingStats = {};
   Map<String, dynamic> _expenseStats = {};
+  Map<String, dynamic> _maintenanceStats = {};
   List<Map<String, dynamic>> _fuelConsumptionTrend = [];
   List<Map<String, dynamic>> _costPerLiterTrend = [];
   List<Map<String, dynamic>> _expenseTrend = [];
@@ -17,6 +18,7 @@ class ReportProvider with ChangeNotifier {
   Map<String, dynamic> get generalStats => _generalStats;
   Map<String, dynamic> get refuelingStats => _refuelingStats;
   Map<String, dynamic> get expenseStats => _expenseStats;
+  Map<String, dynamic> get maintenanceStats => _maintenanceStats;
   List<Map<String, dynamic>> get fuelConsumptionTrend => _fuelConsumptionTrend;
   List<Map<String, dynamic>> get costPerLiterTrend => _costPerLiterTrend;
   List<Map<String, dynamic>> get expenseTrend => _expenseTrend;
@@ -32,6 +34,7 @@ class ReportProvider with ChangeNotifier {
       _generalStats = await _reportingService.calculateGeneralStats(vehicleId);
       _refuelingStats = await _reportingService.calculateFuelEfficiencyStats(vehicleId);
       _expenseStats = await _reportingService.calculateExpenseStats(vehicleId);
+      _maintenanceStats = await _reportingService.calculateMaintenanceStats(vehicleId);
       
       // Load trend data
       _fuelConsumptionTrend = await _reportingService.getFuelConsumptionTrend(vehicleId);

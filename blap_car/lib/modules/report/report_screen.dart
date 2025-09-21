@@ -113,7 +113,7 @@ class GeneralReportScreen extends StatelessWidget {
               
               const SizedBox(height: 16),
               
-              // Chart placeholder
+              // Cost Distribution Chart
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -124,9 +124,7 @@ class GeneralReportScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: Center(
-                          child: Text('Chart will be displayed here'),
-                        ),
+                        child: _buildCostDistributionChart(context, reportProvider),
                       ),
                     ],
                   ),
@@ -153,6 +151,86 @@ class GeneralReportScreen extends StatelessWidget {
             child: Text(value, textAlign: TextAlign.right),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCostDistributionChart(BuildContext context, ReportProvider reportProvider) {
+    // Get cost data from different sources
+    final double refuelingCost = (reportProvider.refuelingStats['totalCost'] as double?) ?? 0.0;
+    final double expenseCost = (reportProvider.expenseStats['totalCost'] as double?) ?? 0.0;
+    final double maintenanceCost = (reportProvider.maintenanceStats['totalCost'] as double?) ?? 0.0;
+    
+    final totalCost = refuelingCost + expenseCost + maintenanceCost;
+    
+    if (totalCost <= 0) {
+      return Center(
+        child: Text(
+          'No cost data available for chart',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    // Prepare data for the pie chart
+    List<PieChartSectionData> sections = [];
+    final colors = [Colors.blue, Colors.green, Colors.orange];
+    
+    if (refuelingCost > 0) {
+      sections.add(
+        PieChartSectionData(
+          value: refuelingCost,
+          title: 'Refueling\n${(refuelingCost/totalCost*100).toStringAsFixed(1)}%',
+          color: colors[0],
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+    
+    if (expenseCost > 0) {
+      sections.add(
+        PieChartSectionData(
+          value: expenseCost,
+          title: 'Expenses\n${(expenseCost/totalCost*100).toStringAsFixed(1)}%',
+          color: colors[1],
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+    
+    if (maintenanceCost > 0) {
+      sections.add(
+        PieChartSectionData(
+          value: maintenanceCost,
+          title: 'Maintenance\n${(maintenanceCost/totalCost*100).toStringAsFixed(1)}%',
+          color: colors[2],
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return PieChart(
+      PieChartData(
+        sections: sections,
+        centerSpaceRadius: 40,
+        // Make the chart responsive to touch
+        pieTouchData: PieTouchData(
+          touchCallback: (FlTouchEvent event, pieTouchResponse) {
+            // Handle touch events if needed
+          },
+        ),
       ),
     );
   }
